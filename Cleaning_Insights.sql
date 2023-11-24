@@ -106,7 +106,6 @@ SELECT
 		OR end_lng IS NULL
 
 -- Found which columns have null values 
-WITH Counts AS (
   SELECT 
     COUNT(CASE WHEN ride_id IS NULL THEN 1 END) AS ride_id,
     COUNT(CASE WHEN rideable_type IS NULL THEN 1 END) AS rideable_type,
@@ -122,34 +121,6 @@ WITH Counts AS (
     COUNT(CASE WHEN end_lng IS NULL THEN 1 END) AS end_lng,
     COUNT(CASE WHEN member_casual IS NULL THEN 1 END) AS member_casual
   FROM `capstone-402023.capstone.all_months`
-)
-
-SELECT 'ride_id' AS Attributes, ride_id AS Count FROM Counts
-UNION ALL
-SELECT 'rideable_type', rideable_type FROM Counts
-UNION ALL
-SELECT 'started_at', started_at FROM Counts
-UNION ALL
-SELECT 'ended_at', ended_at FROM Counts
-UNION ALL
-SELECT 'start_station_name', start_station_name FROM Counts
-UNION ALL
-SELECT 'start_station_id', start_station_id FROM Counts
-UNION ALL
-SELECT 'end_station_name', end_station_name FROM Counts
-UNION ALL
-SELECT 'end_station_id', end_station_id FROM Counts
-UNION ALL
-SELECT 'start_lat', start_lat FROM Counts
-UNION ALL
-SELECT 'start_lng', start_lng FROM Counts
-UNION ALL
-SELECT 'end_lat', end_lat FROM Counts
-UNION ALL
-SELECT 'end_lng', end_lng FROM Counts
-UNION ALL
-SELECT 'member_casual', member_casual FROM Counts;
-
 
     
 -- Created a temporary -- I have used this table when I am required to do analysis with these attributes. 
@@ -176,6 +147,29 @@ CREATE TABLE `capstone-402023.capstone.months_no_null_values` AS (
 				AND start_lng IS NOT NULL
 			)
 ))
+
+
+-- Removed any trip data that could be due to test or service 
+-- CHECKED IF THERE IS ANY DATA LIKE THIS FIRST 
+SELECT start_station_name, start_station_id, end_station_name, end_station_id
+				FROM `capstone-402023.capstone.all_months` 
+
+			WHERE
+					LOWER(start_station_name) LIKE "%test%" OR
+					LOWER(start_station_name) LIKE "%staff%" OR
+					LOWER(start_station_name) LIKE "%service%" OR
+					LOWER(start_station_id) LIKE "%test%" OR
+					LOWER(start_station_id) LIKE "%staff%" OR
+					LOWER(start_station_id) LIKE "%service%" OR
+					LOWER(end_station_name) LIKE "%test%" OR
+					LOWER(end_station_name) LIKE "%staff%" OR
+					LOWER(end_station_name) LIKE "%service%" OR
+					LOWER(end_station_id) LIKE "%test%" OR
+					LOWER(end_station_id) LIKE "%staff%" OR
+					LOWER(end_station_id) LIKE "%service%"
+GROUP BY start_station_name, start_station_id, end_station_name, end_station_id
+
+-- Removed this data by selcting it out. 
 
 
 -- Validation 

@@ -124,6 +124,9 @@ SELECT
 
     
 -- Created a temporary -- I have used this table when I am required to do analysis with these attributes. 
+-------------------------------------------------
+----------------------------------------------
+---------------------------------------------
 CREATE TABLE `capstone-402023.capstone.months_no_null_values` AS (
 		SELECT *
 	FROM `capstone-402023.capstone.all_months`	
@@ -151,6 +154,9 @@ CREATE TABLE `capstone-402023.capstone.months_no_null_values` AS (
 
 -- Removed any trip data that could be due to test or service 
 -- CHECKED IF THERE IS ANY DATA LIKE THIS FIRST 
+-------------------------------------------------
+----------------------------------------------
+---------------------------------------------			    
 SELECT start_station_name, start_station_id, end_station_name, end_station_id
 				FROM `capstone-402023.capstone.all_months` 
 
@@ -170,8 +176,9 @@ SELECT start_station_name, start_station_id, end_station_name, end_station_id
 GROUP BY start_station_name, start_station_id, end_station_name, end_station_id
 
 -- Removed this data by selcting it out. 
-
-
+-------------------------------------------------
+----------------------------------------------
+---------------------------------------------
 -- Validation 
 
 -- Created trip duration and filtered out all the trips that were less than 60 seconds. 
@@ -182,6 +189,113 @@ FROM
   WHERE  CAST(( TIMESTAMP_DIFF(ended_at, started_at, SECOND)) AS INT) < 60
 
 -- 
+
+
+
+
+
+
+--- 
+--Cleaning procedure combined. 
+-----------------------------------
+------------------------------------
+-----------------------------------------
+-----------------------------------------
+CREATE TABLE `capstone-402023.capstone.cleaned_all_months` 
+AS (
+  SELECT 
+    ride_id, rideable_type,
+
+    started_at, ended_at,
+    /*To know the trip duration and eliminate any negative or lower than 60 secs*/
+    TIMESTAMP_DIFF( ended_at, started_at, SECOND) AS trip_duration_seconds,
+
+    /*Here I will be removing characters like "*" and "(Temp)" and also remove any extra whitespaces from the string*/
+    /*I have also made a CASE in which the value is set to "undocked" if the value is null*/
+    CASE 
+        WHEN start_station_name IS NULL THEN "undocked" 
+        ELSE RTRIM(LTRIM(REPLACE(REPLACE(REPLACE(start_station_name, '*', ''), ' (Temp)', ""), '  ', ' ')))  
+    END 
+        AS start_station_name,
+
+
+    CASE 
+          WHEN start_station_id IS NULL THEN "undocked" 
+          ELSE RTRIM(LTRIM(REPLACE(REPLACE(REPLACE(start_station_id, '*', ''), ' (Temp)', ""), '  ', ' ')))  
+    END AS start_station_id,
+
+
+    CASE 
+          WHEN end_station_name IS NULL THEN "undocked" 
+          ELSE RTRIM(LTRIM(REPLACE(REPLACE(REPLACE(end_station_name, '*', ''), ' (Temp)', ""), '  ', ' ')))  
+    END  AS end_station_name,
+    
+    
+    CASE 
+          WHEN end_station_id IS NULL THEN "undocked" 
+          ELSE RTRIM(LTRIM(REPLACE(REPLACE(REPLACE(end_station_id, '*', ''), ' (Temp)', ""), '  ', ' ')))  
+    END  AS end_station_id,
+
+    /*  I will check if the values are in the general range of longitude and lattude*/
+    start_lat,
+    start_lng,
+    end_lat,
+    end_lng,
+
+    /*Here I will be removing any extra whitespaces from the string*/
+    RTRIM(LTRIM(REPLACE(member_casual, '  ', ' '))) AS member_casual
+
+FROM 
+    `capstone-402023.capstone.all_months`
+
+WHERE
+    /*Removing the rows which are test,serivce or staff*/
+     (LOWER(start_station_name) NOT LIKE "%test%" OR
+     LOWER(start_station_name) NOT LIKE "%staff%" OR
+     LOWER(start_station_name) NOT LIKE "%service%" OR
+     LOWER(start_station_id) NOT LIKE "%test%" OR
+     LOWER(start_station_id) NOT LIKE "%staff%" OR
+     LOWER(start_station_id) NOT LIKE "%service%" OR
+     LOWER(end_station_name) NOT LIKE "%test%" OR
+     LOWER(end_station_name) NOT LIKE "%staff%" OR
+     LOWER(end_station_name) NOT LIKE "%service%" OR
+     LOWER(end_station_id) NOT LIKE "%test%" OR
+     LOWER(end_station_id) NOT LIKE "%staff%" OR
+     LOWER(end_station_id) NOT LIKE "%service%")
+
+
+     AND 
+
+     /*To rule out any rows with invalid trip_duration time.*/
+     (CAST(( TIMESTAMP_DIFF(ended_at, started_at, SECOND)) AS INT) < 60)
+
+     AND 
+
+      /*  I will check if the values are in the general range of longitude and lattude*/
+     (
+      (start_lat BETWEEN -90 AND 90) AND (start_lng BETWEEN -180 AND 180)
+
+      AND
+
+      (end_lat BETWEEN -90 AND 90) AND (end_lng BETWEEN -180 AND 180)
+     )
+
+     AND 
+
+     /*Duplicate Check*/
+     (
+      ride_id NOT IN (SELECT ride_id
+                              FROM `capstone-402023.capstone.all_months`  
+                              GROUP BY ride_id 
+                              HAVING COUNT(*) >1)
+     )
+
+
+
+)
+
+
+
 
 
 

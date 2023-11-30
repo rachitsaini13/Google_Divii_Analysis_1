@@ -267,7 +267,7 @@ WHERE
      AND 
 
      /*To rule out any rows with invalid trip_duration time.*/
-     (CAST(( TIMESTAMP_DIFF(ended_at, started_at, SECOND)) AS INT) < 60)
+     (CAST(( TIMESTAMP_DIFF(ended_at, started_at, SECOND)) AS INT) > 60)
 
      AND 
 

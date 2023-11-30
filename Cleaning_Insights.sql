@@ -294,6 +294,68 @@ WHERE
 
 )
 
+------------------------------
+----------------------------CLEAN PERCENTAGE - ROWS DELETED
+-------------------------------
+-------------------------------
+SELECT (100-(
+
+  SELECT 
+    COUNT(*)
+FROM 
+    `capstone-402023.capstone.all_months`
+
+WHERE
+    /*Removing the rows which are test,serivce or staff*/
+     (LOWER(start_station_name) NOT LIKE "%test%" OR
+     LOWER(start_station_name) NOT LIKE "%staff%" OR
+     LOWER(start_station_name) NOT LIKE "%service%" OR
+     LOWER(start_station_id) NOT LIKE "%test%" OR
+     LOWER(start_station_id) NOT LIKE "%staff%" OR
+     LOWER(start_station_id) NOT LIKE "%service%" OR
+     LOWER(end_station_name) NOT LIKE "%test%" OR
+     LOWER(end_station_name) NOT LIKE "%staff%" OR
+     LOWER(end_station_name) NOT LIKE "%service%" OR
+     LOWER(end_station_id) NOT LIKE "%test%" OR
+     LOWER(end_station_id) NOT LIKE "%staff%" OR
+     LOWER(end_station_id) NOT LIKE "%service%")
+
+
+     AND 
+
+     /*To rule out any rows with invalid trip_duration time.*/
+     (CAST(( TIMESTAMP_DIFF(ended_at, started_at, SECOND)) AS INT) > 60)
+
+     AND 
+
+      /*  I will check if the values are in the general range of longitude and lattude*/
+     (
+      (start_lat BETWEEN -90 AND 90) AND (start_lng BETWEEN -180 AND 180)
+
+      AND
+
+      (end_lat BETWEEN -90 AND 90) AND (end_lng BETWEEN -180 AND 180)
+     )
+
+     AND 
+
+     /*Duplicate Check*/
+     (
+      ride_id NOT IN (SELECT ride_id
+                              FROM `capstone-402023.capstone.all_months`  
+                              GROUP BY ride_id 
+                              HAVING COUNT(*) >1)
+     )
+
+
+
+
+
+
+
+
+)/COUNT(*)*100) AS percentage_data_removed
+FROM `capstone-402023.capstone.all_months`
 
 
 

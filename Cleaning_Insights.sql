@@ -79,7 +79,7 @@ FROM
 
 
 --percentage DELETED (AROUND 24 PERCENT of the whole data.) 
-          
+       SELECT   
 	ROUND(count(*)/(SELECT COUNT(*) FROM `capstone-402023.capstone.all_months`),2)*100
  AS null_row_percentage
 	

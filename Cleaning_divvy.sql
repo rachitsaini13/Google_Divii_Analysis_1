@@ -205,11 +205,7 @@ CREATE TABLE `capstone-402023.capstone.cleaned_all_months`
 AS (
   SELECT 
     ride_id, 
-    CASE 
-            WHEN rideable_type="docked_bike" THEN "classic_bike"
-            ELSE rideable_type
-    END 
-        AS rideable_type,
+    rideable_type,
 
     started_at, ended_at,
     /*To know the trip duration and eliminate any negative or lower than 60 secs*/
@@ -295,11 +291,14 @@ WHERE
                               HAVING COUNT(*) >1)
      )
 
+     AND 
+      (
+        rideable_type!="docked_bike"
+      )
+
 
 
 )
-
-
 
 
 
